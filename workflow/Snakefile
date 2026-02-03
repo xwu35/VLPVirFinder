@@ -1,0 +1,65 @@
+from scripts.common import parse_samples_and_sequences
+
+configfile: os.path.join(workflow.basedir, "..", "config", "config.yaml")
+
+# path to metadata
+METADATA = config["sample_info"]
+
+# directory to raw reads
+READDIR = config["reads_dir"]
+
+# directory to save the results
+RESULTS_DIR = config["results_dir"]
+
+# get sample names and sequences path
+SAMPLE, R1_MAP, R2_MAP = parse_samples_and_sequences(METADATA, READDIR)
+
+# tools that are not installed through env
+GENOMAD = config["tools"]["genomad_env"]
+VIRSORTER2= config["tools"]["virsorter2_env"]
+CT3=config["tools"]["cenote_taker3_env"]
+CHECKV=config["tools"]["checkv_env"]
+
+# rules
+include: "rules/setup.smk"
+include: "rules/preprocessing.smk"
+include: "rules/assembly.smk"
+include: "rules/virus_identification.smk"
+include: "rules/select_viral_contigs.smk"
+
+# funtion to define requested inputs for the rule all
+def get_all_input(wildcards):
+    wanted_input = []
+
+    if config["step"] == "fastqc":
+        wanted_input = fastqc_input
+
+    if config["step"] == "preprocess":
+        # get raw reads fastqc input
+        wanted_input += fastqc_input
+        # get clean reads input
+        wanted_input += clean_reads_input
+      
+    if config["step"] == "assemble":
+        # get raw reads fastqc input
+        wanted_input += fastqc_input
+        # get clean reads input
+        wanted_input += clean_reads_input
+        # get assembly input
+        wanted_input += assembly_input
+
+    if config["step"] == "identification":
+        # get raw reads fastqc input
+        wanted_input += fastqc_input
+        # get clean reads input
+        wanted_input += clean_reads_input
+        # get assembly input
+        wanted_input += assembly_input
+        # get identification input
+        wanted_input += identification_input
+
+    return wanted_input
+
+# master target rule
+rule all:
+    input: get_all_input
