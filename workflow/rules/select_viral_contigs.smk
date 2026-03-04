@@ -2,7 +2,7 @@ rule select_viral_contigs:
     """
     Contigs satisfying one of the following criteria were considered viral:
     1) geNomad: all identified contigs
-    2) Cenote-taker2: all identified contigs
+    2) Cenote-taker3: all identified contigs
     3) VirSorter2: all identified contigs
     """
     input:
